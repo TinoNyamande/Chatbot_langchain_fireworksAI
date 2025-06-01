@@ -5,3 +5,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+
+class TranslateRequest(BaseModel):
+    message: str
+    lang1: str
+    lang2: str
