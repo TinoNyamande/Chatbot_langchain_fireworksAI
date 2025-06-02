@@ -1,5 +1,8 @@
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage,SystemMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START,StateGraph,MessagesState
+from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
 import app.config  
 
 model = init_chat_model(
@@ -7,8 +10,34 @@ model = init_chat_model(
     model_provider="fireworks"
 )
 
+workflow = StateGraph(state_schema=MessagesState)
+prompt_template = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant. Answer everything in a detailed , proffessional way"
+        ),
+        MessagesPlaceholder(variable_name="messages")
+    ]
+)
+
+def call_model(state:MessagesState):
+    prompt = prompt_template.invoke(state["messages"])
+    response = model.invoke(prompt)
+    return {"messages":response}
+
+workflow.add_edge(START,"model")
+workflow.add_node("model",call_model)
+
+memory = MemorySaver()
+
+app = workflow.compile(checkpointer=memory)
+
 def get_response(message: str) -> str:
-    return model.invoke([HumanMessage(content=message)]).content
+    config = {"configurable":{"thread_id":"12345"}}
+    input_messages = HumanMessage(message)
+    output = app.invoke({"messages":input_messages},config)
+    return output["messages"][-1].content
 
 def get_translated_message(message:str,lang1:str, lang2:str)->str:
     system_prompt = (
