@@ -33,8 +33,10 @@ memory = MemorySaver()
 
 app = workflow.compile(checkpointer=memory)
 
-def get_response(message: str) -> str:
-    config = {"configurable":{"thread_id":"12345"}}
+def get_response(message: str,conversationId:str) -> str:
+    print("✅ Chat service hit!")
+    print(f"📥 conversationId = {conversationId}")    
+    config = {"configurable":{"thread_id":conversationId}}
     input_messages = HumanMessage(message)
     output = app.invoke({"messages":input_messages},config)
     return output["messages"][-1].content

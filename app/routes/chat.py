@@ -6,7 +6,9 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    response = get_response(request.message)
+    print("✅ Chat route hit!")
+    print(f"📥 conversationId = {request.conversationId}")
+    response = get_response(request.message,request.conversationId)
     return {"response": response}
 
 @router.post("/translate",response_model=ChatResponse)
